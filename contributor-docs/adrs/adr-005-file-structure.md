@@ -1,4 +1,4 @@
-# ADR XXX: File structure
+# ADR 005: File structure
 
 ## Status
 
