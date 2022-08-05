@@ -4,20 +4,20 @@ import {render, waitFor} from '@testing-library/react'
 import createSlots from '../../utils/create-slots'
 
 // setup a component with slots
-const {Slots, Slot} = createSlots(['One', 'Two', 'Three'])
+const {useSlots, Slot} = createSlots<'One' | 'Two' | 'Three'>()
 
 const ComponentWithSlots: React.FC<React.PropsWithChildren<unknown>> = ({children}) => {
+  const {slots, SlotsProvider} = useSlots()
+
   return (
-    <Slots>
-      {slots => (
-        <div>
-          {slots.One}
-          <span>
-            {children} {slots.Two} {slots.Three}
-          </span>
-        </div>
-      )}
-    </Slots>
+    <SlotsProvider>
+      <div>
+        {slots.One}
+        <span>
+          {children} {slots.Two} {slots.Three}
+        </span>
+      </div>
+    </SlotsProvider>
   )
 }
 const SlotItem1: React.FC<React.PropsWithChildren<unknown>> = ({children}) => <Slot name="One">{children}</Slot>
@@ -48,6 +48,25 @@ describe('ComponentWithSlots', () => {
         <SlotItem1>first</SlotItem1>
         free form
       </ComponentWithSlots>
+    )
+    expect(component.container).toMatchSnapshot()
+  })
+
+  it('works with custom context', async () => {
+    const Context = React.createContext({salutation: 'not found'})
+
+    const ContextReadingSlot = () => {
+      const {salutation} = React.useContext(Context)
+      return <SlotItem1>{salutation}</SlotItem1>
+    }
+
+    const component = render(
+      <Context.Provider value={{salutation: 'hello'}}>
+        <ComponentWithSlots>
+          <ContextReadingSlot />
+          free form
+        </ComponentWithSlots>
+      </Context.Provider>
     )
     expect(component.container).toMatchSnapshot()
   })

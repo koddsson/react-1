@@ -1,4 +1,4 @@
-import React from 'react'
+import React, {useCallback, useMemo} from 'react'
 import {useForceUpdate} from './use-force-update'
 import useLayoutEffect from './useIsomorphicLayoutEffect'
 
@@ -7,7 +7,7 @@ import useLayoutEffect from './useIsomorphicLayoutEffect'
  *  For example: ActionList.Item uses createSlots to get a Slots wrapper
  *  + Slot component that is used by LeadingVisual, Description
  */
-const createSlots = <SlotNames extends string>(slotNames: SlotNames[]) => {
+const createSlots = <SlotNames extends string>() => {
   type Slots = {
     [key in SlotNames]?: React.ReactNode
   }
@@ -26,23 +26,17 @@ const createSlots = <SlotNames extends string>(slotNames: SlotNames[]) => {
    *  When all the children have mounted = registered themselves in slot,
    *  we re-render the parent component to render with slots
    */
-  const Slots: React.FC<
-    React.PropsWithChildren<{
-      children: (slots: Slots) => React.ReactNode
-    }>
-  > = ({children}) => {
-    // initialise slots
-    const slotsDefinition: Slots = {}
-    slotNames.map(name => (slotsDefinition[name] = null))
-    const slotsRef = React.useRef<Slots>(slotsDefinition)
+  const useSlots = () => {
+    const slotsRef = React.useRef<Slots>({})
 
     const rerenderWithSlots = useForceUpdate()
-    const [isMounted, setIsMounted] = React.useState(false)
+
+    const isMountedRef = React.useRef(false)
 
     // fires after all the effects in children
     useLayoutEffect(() => {
       rerenderWithSlots()
-      setIsMounted(true)
+      isMountedRef.current = true
     }, [rerenderWithSlots])
 
     const registerSlot = React.useCallback(
@@ -50,9 +44,9 @@ const createSlots = <SlotNames extends string>(slotNames: SlotNames[]) => {
         slotsRef.current[name] = contents
 
         // don't render until the component mounts = all slots are registered
-        if (isMounted) rerenderWithSlots()
+        if (isMountedRef.current) rerenderWithSlots()
       },
-      [isMounted, rerenderWithSlots]
+      [rerenderWithSlots]
     )
 
     // Slot can be removed from the tree as well,
@@ -65,13 +59,24 @@ const createSlots = <SlotNames extends string>(slotNames: SlotNames[]) => {
       [rerenderWithSlots]
     )
 
-    /**
-     * Slots uses a render prop API so abstract the
-     * implementation detail of using a context provider.
-     */
+    const context = useMemo(
+      () => ({
+        registerSlot,
+        unregisterSlot
+      }),
+      [registerSlot, unregisterSlot]
+    )
+
     const slots = slotsRef.current
 
-    return <SlotsContext.Provider value={{registerSlot, unregisterSlot}}>{children(slots)}</SlotsContext.Provider>
+    const SlotsProvider = useCallback(
+      ({children}: {children: React.ReactNode}) => (
+        <SlotsContext.Provider value={context}>{children}</SlotsContext.Provider>
+      ),
+      [context]
+    )
+
+    return {SlotsProvider, slots}
   }
 
   const Slot: React.FC<
@@ -90,7 +95,7 @@ const createSlots = <SlotNames extends string>(slotNames: SlotNames[]) => {
     return null
   }
 
-  return {Slots, Slot}
+  return {useSlots, Slot}
 }
 
 export default createSlots
