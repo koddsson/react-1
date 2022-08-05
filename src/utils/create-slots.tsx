@@ -15,16 +15,11 @@ const createSlots = <SlotNames extends string>(slotNames: SlotNames[]) => {
   type ContextProps = {
     registerSlot: (name: SlotNames, contents: React.ReactNode) => void
     unregisterSlot: (name: SlotNames) => void
-    context: Record<string, unknown>
   }
   const SlotsContext = React.createContext<ContextProps>({
     registerSlot: () => null,
-    unregisterSlot: () => null,
-    context: {}
+    unregisterSlot: () => null
   })
-
-  // maintain a static reference to avoid infinite render loop
-  const defaultContext = Object.freeze({})
 
   /** Slots uses a Double render strategy inspired by [reach-ui/descendants](https://github.com/reach/reach-ui/tree/develop/packages/descendants)
    *  Slot registers themself with the Slots parent.
@@ -33,10 +28,9 @@ const createSlots = <SlotNames extends string>(slotNames: SlotNames[]) => {
    */
   const Slots: React.FC<
     React.PropsWithChildren<{
-      context?: ContextProps['context']
       children: (slots: Slots) => React.ReactNode
     }>
-  > = ({context = defaultContext, children}) => {
+  > = ({children}) => {
     // initialise slots
     const slotsDefinition: Slots = {}
     slotNames.map(name => (slotsDefinition[name] = null))
@@ -77,9 +71,7 @@ const createSlots = <SlotNames extends string>(slotNames: SlotNames[]) => {
      */
     const slots = slotsRef.current
 
-    return (
-      <SlotsContext.Provider value={{registerSlot, unregisterSlot, context}}>{children(slots)}</SlotsContext.Provider>
-    )
+    return <SlotsContext.Provider value={{registerSlot, unregisterSlot}}>{children(slots)}</SlotsContext.Provider>
   }
 
   const Slot: React.FC<
@@ -88,12 +80,12 @@ const createSlots = <SlotNames extends string>(slotNames: SlotNames[]) => {
       children: React.ReactNode
     }>
   > = ({name, children}) => {
-    const {registerSlot, unregisterSlot, context} = React.useContext(SlotsContext)
+    const {registerSlot, unregisterSlot} = React.useContext(SlotsContext)
 
     useLayoutEffect(() => {
-      registerSlot(name, typeof children === 'function' ? children(context) : children)
+      registerSlot(name, children)
       return () => unregisterSlot(name)
-    }, [name, children, registerSlot, unregisterSlot, context])
+    }, [name, children, registerSlot, unregisterSlot])
 
     return null
   }
