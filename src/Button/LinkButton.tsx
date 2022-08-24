@@ -3,11 +3,15 @@ import {merge, SxProp} from '../sx'
 import {LinkButtonProps} from './types'
 import {ButtonBase, ButtonBaseProps} from './ButtonBase'
 import {ForwardRefComponent as PolymorphicForwardRefComponent} from '@radix-ui/react-polymorphic'
+import validateAs from '../utils/validate-as'
+
+const ALLOWED_TAGS = ['a', 'button']
 
 type MyProps = LinkButtonProps & ButtonBaseProps
 
 const LinkButton = forwardRef<HTMLElement, MyProps>(
   ({children, as: Component = 'a', sx = {}, ...props}, forwardedRef): JSX.Element => {
+    validateAs(Component, ALLOWED_TAGS)
     const style = {
       width: 'fit-content',
       '&:hover:not([disabled])': {
