@@ -1,5 +1,17 @@
 # @primer/components
 
+## 35.10.0
+
+### Minor Changes
+
+- [#2347](https://github.com/primer/react/pull/2347) [`09a5d806`](https://github.com/primer/react/commit/09a5d8064b794221be4cd961759ec15c1eea2a02) Thanks [@mperrotti](https://github.com/mperrotti)! - Adds a `size` prop to the SegmentedControl component. Users can choose between 'medium' (default), and 'small'. More sizes can be added when/if we find we need them.
+
+* [#2324](https://github.com/primer/react/pull/2324) [`027e44a7`](https://github.com/primer/react/commit/027e44a73542a9b115d688a7f16a0f63c2d9d86f) Thanks [@joshblack](https://github.com/joshblack)! - Update PageLayout.Pane to support a ref on the element wrapping children
+
+### Patch Changes
+
+- [#2305](https://github.com/primer/react/pull/2305) [`6cd50a54`](https://github.com/primer/react/commit/6cd50a54f8b399eef751507d44ffbfa35ede3d9f) Thanks [@colebemis](https://github.com/colebemis)! - Add draft TreeView component
+
 ## 35.9.0
 
 ### Minor Changes
